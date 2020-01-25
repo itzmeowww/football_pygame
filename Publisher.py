@@ -1,40 +1,45 @@
 import paho.mqtt.client as mqtt
 host = "broker.mqttdashboard.com"
 port = 8000
-channel1 = "TEST/MQTT"
-channel2 = "TEST/MQTT2"
+receive = "topic/1"
+send_l = "topic/l"
+send_r = "topic/r"    
 
 
-   
-x = 5
-def send():
-    x = input('x : ')
-    client.publish(channel1,x)
-    print("Sent => " + str(x))
+left = 0
 
-def on_message(client, userdata,msg):
+right = 0
+def on_message(_client, userdata, msg):
+    global left 
+    global right
     mes = msg.payload.decode("utf-8", "strict")
-    #print(mes)
-    
+    print("MES : " + mes)
+
     if mes == "start":
         print("START")
-        send()
-        
+        left = input("l : ")
+        right = input("r : ")
+
     elif mes == "end":
-        print("END")
+        client.publish(send_l,left)
+        client.publish(send_r,right)
+        print(str(left),str(right))
+        
+
 
 def on_connect(self, client, userdata, rc):
     print("MQTT Connected.")
-    self.subscribe(channel2)
-    print("Subscribed to channel " + str(channel2))
+    self.subscribe(receive)
+    print("Subscribed to channel " + str(receive))
+
+
 client = mqtt.Client()
 client.on_message = on_message
 client.on_connect = on_connect
-client.connect(host) 
+client.connect(host)
 client.loop_start()
+
 while(1):
     x = 1
 
-#client.loop_forever()
-    
-    
+# client.loop_forever()
