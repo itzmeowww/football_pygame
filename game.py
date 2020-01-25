@@ -23,7 +23,7 @@ class SettingWidget:
         self.widget.destroy()
 
     def __init__(self, width, height):
-        self.name1 = "MCU"
+        self.name1 = "MUN"
         self.name2 = "LIV"
         self.goal = 5
         self.widget = tk.Tk()
@@ -171,12 +171,12 @@ class Game:
         self.height = height
         self.size = (width, height)
         self.screen = pygame.display.set_mode(self.size)
-        pygame.display.set_caption('Football Game')
+        pygame.display.set_caption('Synch - Ball')
         self.clock = pygame.time.Clock()
         #colors
         self.black = 0, 0, 0
-        self.green = 0, 255, 0
-        self.blue = 0, 0, 255
+        self.green = 55, 148, 7
+        self.blue = 116, 236, 242
         self.red = 255, 0, 0
         self.white = 255, 255, 255
         #font size
@@ -205,9 +205,9 @@ class Game:
             self.start = False
 
     def win(self, name):
-        self.screen.fill(self.white)
+        self.screen.fill(self.blue)
         winner = Text(self.screen, self.font_large, self.black, 'center')
-        winner.update(name + " win!!", self.width//2, self.height//2)
+        winner.update(name + " won!!", self.width//2, self.height//2)
 
     def draw_goal(self):
         self.goalImg = pygame.image.load('goal.png')  # 919*1534
@@ -221,7 +221,7 @@ class Game:
         self.screen.blit(self.goalImg2, self.pos)
 
     def run(self):
-        self.screen.fill(self.white)
+        self.screen.fill(self.blue)
         pygame.draw.rect(self.screen, self.green, pygame.Rect(0, 2*self.height//3, self.width, self.height//3))
 
         self.team1 = Text(self.screen, self.font_small, self.black, 'topleft')
@@ -255,9 +255,10 @@ class Game:
 
         #Control ball movement
         vr = Text(self.screen, self.font_small, self.black, 'topright')
-        vr.update(self.val_r, self.width-30, 60)
+        vr.update("Synch Index : " + str(self.val_r), self.width-80, self.height-60)
+
         vl = Text(self.screen, self.font_small, self.black, 'topleft')
-        vl.update(self.val_l, 30, 60)
+        vl.update("Synch Index : " + str(self.val_l), 80, self.height-60)
 
         if self.have_l and self.have_r:
             
