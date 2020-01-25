@@ -1,0 +1,10 @@
+{
+    "cSpell.words": [
+        "blit",
+        "mqtt",
+        "mqttdashboard",
+        "paho",
+        "pygame"
+    ],
+    "python.formatting.provider": "autopep8"
+}
