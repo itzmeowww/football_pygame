@@ -5,7 +5,10 @@
         "mqtt",
         "mqttdashboard",
         "paho",
-        "pygame"
+        "pygame",
+        "winfo"
     ],
-    "python.formatting.provider": "autopep8"
+    "python.formatting.provider": "autopep8",
+
+    
 }

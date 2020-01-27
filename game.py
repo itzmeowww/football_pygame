@@ -2,18 +2,14 @@ import pygame
 import sys
 import tkinter as tk
 import paho.mqtt.client as mqtt
-import math
 
+# This is setting for mqtt
 host = "broker.mqttdashboard.com"
 port = 8000
 receive_l = "topic/l"
 receive_r = "topic/r"
 send = "topic/1"
 
-size = width, height = 300, 100
-# class of setting window
-# Setting menu
-# For setting the name of each team and the goal
 
 
 class SettingWidget:
@@ -27,7 +23,9 @@ class SettingWidget:
         #print(self.name1, self.name2)
         self.widget.destroy()
 
-    def __init__(self, width, height):
+    def __init__(self, _width, _height):
+        self.widget_width = _width
+        self.widget_height = _height
         self.name1 = "MUN"
         self.name2 = "LIV"
         self.score_to_win = 5
@@ -99,28 +97,22 @@ def on_message(client, userdata, msg):
         game.have_r = True
 
 
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect(host)
-client.loop_start()
-
-
-score1 = 0
-score2 = 0
-
-done = False
-
-num = 0
+Client = mqtt.Client()
+Client.on_connect = on_connect
+Client.on_message = on_message
+Client.connect(host)
+Client.loop_start()
 
 
 class Text:
-    def __init__(self, screen, size, color, type,):
-        self.size = size
+    def __init__(self, screen, _size, color, _type,):
+        self.size = _size
         self.font = pygame.font.Font('freesansbold.ttf', self.size)
         self.screen = screen
-        self.type = type
+        self.type = _type
         self.color = color
+        self.text = None
+        self.rect = None
 
     def update(self, text, x, y):
         self.text = self.font.render(str(text), True, self.color)
@@ -131,10 +123,11 @@ class Text:
 
 
 class Ball:
-    def __init__(self, x, y, r, goal_width, canvas_width):
+    def __init__(self, x, y, r, goal_width, canvas_width, screen):
         self.speed = 5
         self.canvas_width = canvas_width
         self.goal_width = goal_width
+        self.screen = screen
         self.x = x
         self.y = y
         self.r = r
@@ -148,7 +141,7 @@ class Ball:
         self.all_angle = 0
         self.dir = 0
 
-    def update(self, screen):
+    def update(self):
         #print("UP ", self.all_angle, self.angle)
 
         if self.all_angle == self.angle:
@@ -166,7 +159,7 @@ class Ball:
             self.Img = pygame.transform.rotate(
                 self.old_Img, (self.angle % 360 + 360) % 360)
 
-        self.screen = screen
+        
         self.pos = self.Img.get_rect()
         self.pos.center = (self.x, self.y)
         self.screen.blit(self.Img, self.pos)
@@ -214,14 +207,13 @@ class Game:
         self.goal = int(goal)
         self.goal_width = 120
         self.ball = Ball(self.width//2, 2*self.height//3 -
-                         40, 40, self.goal_width, self.width)
+                         40, 40, self.goal_width, self.width,self.screen)
         self.ball_x = self.ball.x
         self.r_ball_x = self.ball_x
         self.phase = 1
         self.start_ticks = pygame.time.get_ticks()
         self.start = False
         self.var = 0
-
 
     def reset(self):
         self.ball_x = self.r_ball_x
@@ -231,7 +223,7 @@ class Game:
         self.ball.angle = 0
         self.start_ticks = pygame.time.get_ticks()
         if self.start:
-            client.publish(send, "end")
+            Client.publish(send, "end")
             self.start = False
 
     def win(self, name):
@@ -273,8 +265,8 @@ class Game:
             self.cdt = Text(self.screen, self.font_large, self.black, 'center')
             self.cdt.update('start!', self.width//2, self.height//3)
             if not self.start:
-                #print("-start")
-                client.publish(send, "start")
+                # print("-start")
+                Client.publish(send, "start")
                 self.start = True
         elif self.seconds < self.prepare_time + self.collecting_time:
             self.cdt = Text(self.screen, self.font_large, self.black, 'center')
@@ -282,8 +274,8 @@ class Game:
                             str(13-self.seconds), self.width//2, self.height//3)
 
         elif self.seconds >= self.prepare_time + self.collecting_time:
-            #print("-end")
-            client.publish(send, "end")
+            # print("-end")
+            Client.publish(send, "end")
             self.start_ticks = pygame.time.get_ticks()
             self.start = False
 
@@ -308,7 +300,7 @@ class Game:
 
             print(self.ball.all_angle)
 
-        self.ball.update(self.screen)
+        self.ball.update()
 
         if self.ball.score != 0:
             if self.ball.score == 1:
@@ -339,10 +331,13 @@ class Game:
         while(1):
             self.update()
 
-
     # <a href="https://www.freepik.com/free-photos-vectors/sport">Sport vector created by titusurya - www.freepik.com</a>
-team1, team2,goal, width,height,ang_mul = SettingWidget(width, height).getname()
+
+
+size = width, height = 300, 100
+team1, team2, goal, width, height, ang_mul = SettingWidget(
+    width, height).getname()
 size = width, height
-game = Game(team1,team2,goal,width,height,ang_mul)
+game = Game(team1, team2, goal, width, height, ang_mul)
 game.begin()
 print('exit')
