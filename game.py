@@ -222,6 +222,7 @@ class Game:
         self.start = False
         self.var = 0
 
+
     def reset(self):
         self.ball_x = self.r_ball_x
         self.ball.x = self.ball_x
@@ -272,7 +273,7 @@ class Game:
             self.cdt = Text(self.screen, self.font_large, self.black, 'center')
             self.cdt.update('start!', self.width//2, self.height//3)
             if not self.start:
-                print("-start")
+                #print("-start")
                 client.publish(send, "start")
                 self.start = True
         elif self.seconds < self.prepare_time + self.collecting_time:
@@ -281,7 +282,7 @@ class Game:
                             str(13-self.seconds), self.width//2, self.height//3)
 
         elif self.seconds >= self.prepare_time + self.collecting_time:
-            print("-end")
+            #print("-end")
             client.publish(send, "end")
             self.start_ticks = pygame.time.get_ticks()
             self.start = False
@@ -334,21 +335,14 @@ class Game:
         pygame.display.flip()
         self.clock.tick(30)
 
+    def begin(self):
+        while(1):
+            self.update()
+
+
     # <a href="https://www.freepik.com/free-photos-vectors/sport">Sport vector created by titusurya - www.freepik.com</a>
 team1, team2,goal, width,height,ang_mul = SettingWidget(width, height).getname()
-
-
 size = width, height
-#print(team1, team2, goal)
-
 game = Game(team1,team2,goal,width,height,ang_mul)
-while 1:
-    game.update()
-
-    # if ball.colliderect(goal1):
-    #    print('goal1')
-    # print(num)
-    #num = num+1
-    # pygame.time.wait(1000)
-
-    # client.publish(channel2,"start")
+game.begin()
+print('exit')
