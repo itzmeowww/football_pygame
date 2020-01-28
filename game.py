@@ -75,7 +75,7 @@ class SettingWidget:
         self.input_game_height = self.add_input(
             'Game height', self.game_height, 5, 0)
         self.input_game_ang_mul = self.add_input(
-            'Game angle co-efficient', self.game_ang_mul, 6, 0)
+            'Game angle coefficient', self.game_ang_mul, 6, 0)
 
         tk.Label(self.widget, text='').grid(row=7)
 
