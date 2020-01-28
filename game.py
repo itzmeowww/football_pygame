@@ -4,13 +4,13 @@ import tkinter as tk
 import paho.mqtt.client as mqtt
 
 # This is setting for mqtt
-host = "broker.mqttdashboard.com"
-port = 8000
+# host = "broker.mqttdashboard.com"
+# port = 8000
+host = "localhost"
+port = 1883
 receive_l = "topic/l"
 receive_r = "topic/r"
 send = "topic/1"
-
-
 
 class SettingWidget:
     def btn(self):
@@ -89,18 +89,27 @@ def on_connect(self, client, userdata, rc):
 
 def on_message(client, userdata, msg):
     mes = msg.payload.decode("utf-8", "strict")
-    if msg.topic == receive_l:
-        game.val_l = int(mes)
+    print("message received " ,str(msg.payload.decode("utf-8")))
+    print("message topic=",msg.topic)
+    data = int(float(str(msg.payload.decode("utf-8"))))
+    print('data = ', data)
+
+    if msg.topic == "topic/l":
+        game.val_l = data
+        print("in message left")
+        print(game.val_l)
         game.have_l = True
-    if msg.topic == receive_r:
-        game.val_r = int(mes)
+    elif msg.topic == "topic/r":
+        game.val_r = data
+        print("in message right")
+        print(game.val_r)
         game.have_r = True
 
 
 Client = mqtt.Client()
 Client.on_connect = on_connect
 Client.on_message = on_message
-Client.connect(host)
+Client.connect(host, port = port)
 Client.loop_start()
 
 

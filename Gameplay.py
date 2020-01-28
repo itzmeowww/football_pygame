@@ -18,12 +18,13 @@ class SettingWidget:
         self.goal = int(self.entrygoal.get())
         #print(self.name1, self.name2)
         self.widget.destroy()
-
+        
     def __init__(self,width,height):
         self.name1 = "MCU"
         self.name2 = "LIV"
         self.goal = 5
         self.widget = tk.Tk()
+
         self.widget.geometry(str(width)+"x"+str(height))
         self.widget.title('Setting')
         self.create_widget()
