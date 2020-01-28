@@ -254,6 +254,11 @@ class Game:
         self.ball.speed = 0
         self.ball.ang_speed = 0
         self.ball.angle = 0
+        self.val_l = 0
+        self.val_r = 0
+        self.have_l = 0
+        self.have_r = 0
+        self.d_val_l = self.d_val_r = 0
         self.start_ticks = pygame.time.get_ticks()
         if self.start:
             Client.publish(send, "end")
@@ -309,8 +314,10 @@ class Game:
 
         elif self.seconds >= self.prepare_time + self.collecting_time:
             # print("-end")
-            Client.publish(send, "end")
             self.collect = True
+            self.have_l = self.have_r = 0
+            Client.publish(send, "end")
+            
             self.start_ticks = pygame.time.get_ticks()
             self.start = False
 
@@ -321,7 +328,8 @@ class Game:
 
         vl = Text(self.screen, self.font_small, self.black, 'topleft')
         vl.update("Synch Index : " + str(self.d_val_l), 80, self.height-60)
-
+        
+        #Tell the ball to move
         if self.have_l and self.have_r and self.collect:
             self.collect = False
             self.have_l = self.have_r = False

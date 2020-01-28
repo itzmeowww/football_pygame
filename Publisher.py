@@ -20,6 +20,8 @@ def on_message(_client, userdata, msg):
         print("START")
         left = input("l : ")
         right = input("r : ")
+        
+    if mes == "end":
         client.publish(send_l,left)
         client.publish(send_r,right)
         print(str(left),str(right))
