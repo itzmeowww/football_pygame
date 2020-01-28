@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
-host = "broker.mqttdashboard.com"
-port = 8000
+host = "localhost"
+port = 1883
 receive = "topic/1"
 send_l = "topic/l"
 send_r = "topic/r"    
@@ -14,16 +14,16 @@ def on_message(_client, userdata, msg):
     global right
     mes = msg.payload.decode("utf-8", "strict")
     print("MES : " + mes)
-
-    if mes == "start":
+    send = False
+    if mes == "start" and not send:
+        send = True
         print("START")
         left = input("l : ")
         right = input("r : ")
-
-    elif mes == "end":
         client.publish(send_l,left)
         client.publish(send_r,right)
         print(str(left),str(right))
+        send = False
         
 
 
@@ -36,7 +36,7 @@ def on_connect(self, client, userdata, rc):
 client = mqtt.Client()
 client.on_message = on_message
 client.on_connect = on_connect
-client.connect(host)
+client.connect(host,port=port)
 client.loop_start()
 
 while(1):

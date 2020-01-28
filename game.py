@@ -2,7 +2,7 @@ import pygame
 import sys
 import tkinter as tk
 import paho.mqtt.client as mqtt
-
+import math
 # This is setting for mqtt
 # host = "broker.mqttdashboard.com"
 # port = 8000
@@ -22,6 +22,10 @@ class SettingWidget:
         self.game_ang_mul = int(self.input_game_ang_mul.get())
         #print(self.name1, self.name2)
         self.widget.destroy()
+    
+    def end(self):
+        print('Exit by setting widget')
+        sys.exit()
 
     def __init__(self, _width, _height):
         self.widget_width = _width
@@ -72,9 +76,21 @@ class SettingWidget:
             'Game height', self.game_height, 5, 0)
         self.input_game_ang_mul = self.add_input(
             'Game angle co-efficient', self.game_ang_mul, 6, 0)
+
+        tk.Label(self.widget, text='').grid(row=7)
+
         self.enter_btn = tk.Button(
             self.widget, text='Enter the game', width=25, command=self.btn)
-        self.enter_btn.grid(row=7, columnspan=2)
+        self.enter_btn.grid(row=8, columnspan=2)
+
+        tk.Label(self.widget, text='').grid(row=9)
+
+        self.enter_btn = tk.Button(
+            self.widget, text='Exit', width=25, command=self.end)
+        self.enter_btn.grid(row=10, columnspan=2)
+
+        tk.Label(self.widget, text='').grid(row=11)
+
         self.widget.mainloop()
 
     def getname(self):
@@ -148,25 +164,27 @@ class Ball:
         self.score = 0
         self.angle = 0
         self.all_angle = 0
+        self.ang_speed = 5
         self.dir = 0
 
     def update(self):
         #print("UP ", self.all_angle, self.angle)
 
-        if self.all_angle == self.angle:
-            self.angle = self.angle
-            self.dir = 0
-        elif self.dir == 1:
+        
+        if self.dir == 1:
             self.x = self.x + self.speed
-            self.angle = self.angle-5
+            self.angle = self.angle-self.ang_speed
             self.Img = pygame.transform.rotate(
-                self.old_Img, (self.angle % 360 + 360) % 360)
+                self.old_Img, (int(self.angle) % 360 + 360) % 360)
+            if self.all_angle >= self.angle:
+                self.dir = 0
         elif self.dir == -1:
             self.x = self.x - self.speed
-            self.angle = self.angle+5
-            self.angle = (self.angle % 360 + 360) % 360
+            self.angle = self.angle+self.ang_speed
             self.Img = pygame.transform.rotate(
-                self.old_Img, (self.angle % 360 + 360) % 360)
+                self.old_Img, (int(self.angle) % 360 + 360) % 360)
+            if self.all_angle <= self.angle:
+                self.dir = 0
 
         
         self.pos = self.Img.get_rect()
@@ -189,6 +207,8 @@ class Game:
         self.prepare_time = 3
         self.val_l = 0
         self.val_r = 0
+        self.d_val_l = 0
+        self.d_val_r = 0
         self.have_l = False
         self.have_r = False
         # name & score of each team
@@ -223,12 +243,16 @@ class Game:
         self.start_ticks = pygame.time.get_ticks()
         self.start = False
         self.var = 0
+        self.collect = False
+        self.end = False
 
     def reset(self):
         self.ball_x = self.r_ball_x
         self.ball.x = self.ball_x
         self.ball.score = 0
         self.ball.all_angle = 0
+        self.ball.speed = 0
+        self.ball.ang_speed = 0
         self.ball.angle = 0
         self.start_ticks = pygame.time.get_ticks()
         if self.start:
@@ -278,6 +302,7 @@ class Game:
                 Client.publish(send, "start")
                 self.start = True
         elif self.seconds < self.prepare_time + self.collecting_time:
+            self.collect = False
             self.cdt = Text(self.screen, self.font_large, self.black, 'center')
             self.cdt.update('Collecting Data : ' +
                             str(13-self.seconds), self.width//2, self.height//3)
@@ -285,30 +310,35 @@ class Game:
         elif self.seconds >= self.prepare_time + self.collecting_time:
             # print("-end")
             Client.publish(send, "end")
+            self.collect = True
             self.start_ticks = pygame.time.get_ticks()
             self.start = False
 
         # Control ball movement
         vr = Text(self.screen, self.font_small, self.black, 'topright')
-        vr.update("Synch Index : " + str(self.val_r),
+        vr.update("Synch Index : " + str(self.d_val_r),
                   self.width-80, self.height-60)
 
         vl = Text(self.screen, self.font_small, self.black, 'topleft')
-        vl.update("Synch Index : " + str(self.val_l), 80, self.height-60)
+        vl.update("Synch Index : " + str(self.d_val_l), 80, self.height-60)
 
-        if self.have_l and self.have_r:
-
+        if self.have_l and self.have_r and self.collect:
+            self.collect = False
             self.have_l = self.have_r = False
+            self.d_val_l = self.val_l
+            self.d_val_r = self.val_r
             self.var = self.val_r - self.val_l
             if self.var < 0:
                 self.ball.dir = 1
             elif self.var > 0:
                 self.ball.dir = -1
-            # print(self.val_l,self.val_r)
+            #print(self.val_l,self.val_r)
             self.ball.all_angle = self.ball.all_angle + self.ang_mul*self.var
+            self.ball.speed = max(2*self.ang_mul*abs(self.var)//40,1)
+            self.ball.ang_speed = max(abs(self.ang_mul*self.var)//40,1)
+            #print(self.val_l,self.val_r,self.ball.all_angle,self.ball.angle,self.ball.speed,self.ball.ang_speed)
 
-            print(self.ball.all_angle)
-
+        
         self.ball.update()
 
         if self.ball.score != 0:
@@ -325,7 +355,10 @@ class Game:
         self.seconds = (pygame.time.get_ticks()-self.start_ticks)//1000
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                sys.exit()
+                self.end = True
+                break
+        if self.end:
+            return None
         #print(self.score1, self.score2, self.goal)
         if self.score1 >= self.goal:
             self.win(self.name1)
@@ -339,14 +372,21 @@ class Game:
     def begin(self):
         while(1):
             self.update()
+            if self.end:
+                pygame.display.quit()
+                break
 
     # <a href="https://www.freepik.com/free-photos-vectors/sport">Sport vector created by titusurya - www.freepik.com</a>
 
 
 size = width, height = 300, 100
-team1, team2, goal, width, height, ang_mul = SettingWidget(
-    width, height).getname()
+
 size = width, height
-game = Game(team1, team2, goal, width, height, ang_mul)
-game.begin()
+while 1:
+    team1, team2, goal, width, height, ang_mul = SettingWidget(
+    width, height).getname()
+    game = Game(team1, team2, goal, width, height, ang_mul)
+    game.begin()
+    print('Restart')
+    #game.end = False
 print('exit')
