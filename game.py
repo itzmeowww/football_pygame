@@ -3,6 +3,7 @@ import sys
 import tkinter as tk
 import paho.mqtt.client as mqtt
 import math
+import time
 # This is setting for mqtt
 # host = "broker.mqttdashboard.com"
 # port = 8000
@@ -203,7 +204,7 @@ class Game:
         # amplify angle
         self.ang_mul = ang_mul
         # value receive from mqtt
-        self.collecting_time = 10
+        self.collecting_time = 12
         self.prepare_time = 3
         self.val_l = 0
         self.val_r = 0
@@ -310,14 +311,14 @@ class Game:
             self.collect = False
             self.cdt = Text(self.screen, self.font_large, self.black, 'center')
             self.cdt.update('Collecting Data : ' +
-                            str(13-self.seconds), self.width//2, self.height//3)
+                            str(15-self.seconds), self.width//2, self.height//3)
 
         elif self.seconds >= self.prepare_time + self.collecting_time:
             # print("-end")
             self.collect = True
             self.have_l = self.have_r = 0
             Client.publish(send, "end")
-            
+            time.sleep(2)
             self.start_ticks = pygame.time.get_ticks()
             self.start = False
 
